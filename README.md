@@ -15,7 +15,7 @@ Sliding-window rate counter for measuring event throughput in real-time
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-rate_counter'
+gem "philiprehberger-rate_counter"
 ```
 
 Or install directly:
@@ -78,8 +78,8 @@ reg.reset_all              # => reset all counters
 
 ```bash
 bundle install
-bundle exec rspec      # Run tests
-bundle exec rubocop    # Check code style
+bundle exec rspec
+bundle exec rubocop
 ```
 
 ## License
