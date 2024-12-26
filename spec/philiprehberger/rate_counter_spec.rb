@@ -293,4 +293,80 @@ RSpec.describe Philiprehberger::RateCounter do
       end
     end
   end
+
+  describe 'peak_rate' do
+    it 'starts at zero' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      expect(counter.peak_rate).to eq(0.0)
+    end
+
+    it 'tracks the highest rate observed' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      10.times { counter.increment }
+      peak = counter.peak_rate
+      expect(peak).to be > 0.0
+    end
+
+    it 'resets with counter' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      5.times { counter.increment }
+      counter.reset
+      expect(counter.peak_rate).to eq(0.0)
+    end
+  end
+
+  describe 'snapshot' do
+    it 'returns a frozen hash with expected keys' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment(5)
+      snap = counter.snapshot
+      expect(snap).to be_frozen
+      expect(snap.keys).to contain_exactly(:count, :rate, :peak_rate, :window, :timestamp)
+    end
+
+    it 'has correct count' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment(3)
+      expect(counter.snapshot[:count]).to eq(3)
+    end
+
+    it 'has correct window' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 30)
+      expect(counter.snapshot[:window]).to eq(30)
+    end
+
+    it 'has a timestamp' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      expect(counter.snapshot[:timestamp]).to be_a(Float)
+    end
+
+    it 'includes peak_rate' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment(10)
+      expect(counter.snapshot[:peak_rate]).to be >= 0.0
+    end
+  end
+
+  describe 'registry snapshot' do
+    it 'returns snapshots for all counters' do
+      registry = Philiprehberger::RateCounter::Registry.new
+      registry[:api].increment(5)
+      registry[:db].increment(3)
+      snap = registry.snapshot
+      expect(snap.keys).to contain_exactly(:api, :db)
+      expect(snap[:api][:count]).to eq(5)
+      expect(snap[:db][:count]).to eq(3)
+    end
+
+    it 'returns frozen hash' do
+      registry = Philiprehberger::RateCounter::Registry.new
+      registry[:test].increment
+      expect(registry.snapshot).to be_frozen
+    end
+
+    it 'returns empty hash for empty registry' do
+      registry = Philiprehberger::RateCounter::Registry.new
+      expect(registry.snapshot).to eq({})
+    end
+  end
 end

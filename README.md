@@ -37,6 +37,22 @@ counter.count             # => total events in window
 counter.rate_per(:minute) # => events per minute
 ```
 
+### Peak Rate and Snapshots
+
+```ruby
+require "philiprehberger/rate_counter"
+
+counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+100.times { counter.increment }
+
+counter.peak_rate           # => highest rate per second observed
+counter.snapshot            # => { count: 100, rate: 16.7, peak_rate: 16.7, window: 60, timestamp: ... }
+
+registry = Philiprehberger::RateCounter::Registry.new
+registry[:api].increment(50)
+registry.snapshot           # => { api: { count: 50, rate: ..., ... } }
+```
+
 ### Registry
 
 Manage multiple named counters with a shared window configuration:
@@ -62,6 +78,8 @@ reg.reset_all              # => reset all counters
 | `#rate` | Events per second over the window |
 | `#count` | Total events within the window |
 | `#rate_per(unit)` | Projected rate per `:second`, `:minute`, or `:hour` |
+| `#peak_rate` | Highest rate per second observed since creation or last reset |
+| `#snapshot` | Frozen hash with count, rate, peak_rate, window, and timestamp |
 | `#reset` | Clear all recorded events |
 
 ### `Philiprehberger::RateCounter::Registry`
@@ -72,6 +90,7 @@ reg.reset_all              # => reset all counters
 | `#[](name)` | Access or create a named counter |
 | `#names` | List all registered counter names |
 | `#size` | Number of registered counters |
+| `#snapshot` | Frozen hash of name to counter snapshot |
 | `#reset_all` | Reset all counters |
 
 ## Development

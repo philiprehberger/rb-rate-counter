@@ -29,6 +29,7 @@ module Philiprehberger
 
         @window = window
         @buckets = []
+        @peak_rate = 0.0
         @mutex = Mutex.new
       end
 
@@ -39,6 +40,9 @@ module Philiprehberger
       def increment(n = 1)
         @mutex.synchronize do
           @buckets << [now, n]
+          prune
+          current_rate = rate_internal
+          @peak_rate = current_rate if current_rate > @peak_rate
         end
         self
       end
@@ -49,7 +53,7 @@ module Philiprehberger
       def count
         @mutex.synchronize do
           prune
-          @buckets.sum { |_ts, n| n }
+          count_internal
         end
       end
 
@@ -59,10 +63,30 @@ module Philiprehberger
       def rate
         @mutex.synchronize do
           prune
-          return 0.0 if @buckets.empty?
+          rate_internal
+        end
+      end
 
-          total = @buckets.sum { |_ts, n| n }
-          total.to_f / @window
+      # Get the highest rate per second observed since creation or last reset
+      #
+      # @return [Float] peak events per second
+      def peak_rate
+        @mutex.synchronize { @peak_rate }
+      end
+
+      # Return a frozen snapshot of the counter state
+      #
+      # @return [Hash] frozen hash with count, rate, peak_rate, window, and timestamp
+      def snapshot
+        @mutex.synchronize do
+          prune
+          {
+            count: count_internal,
+            rate: rate_internal,
+            peak_rate: @peak_rate,
+            window: @window,
+            timestamp: Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          }.freeze
         end
       end
 
@@ -82,10 +106,24 @@ module Philiprehberger
       #
       # @return [void]
       def reset
-        @mutex.synchronize { @buckets.clear }
+        @mutex.synchronize do
+          @buckets.clear
+          @peak_rate = 0.0
+        end
       end
 
       private
+
+      def count_internal
+        @buckets.sum { |_ts, n| n }
+      end
+
+      def rate_internal
+        return 0.0 if @buckets.empty?
+
+        total = @buckets.sum { |_ts, n| n }
+        total.to_f / @window
+      end
 
       def now
         Process.clock_gettime(Process::CLOCK_MONOTONIC)
