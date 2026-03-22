@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Sliding-window rate counter for measuring event throughput in real-time'
   spec.description   = 'Measure event rates (requests/sec, errors/min) using a sliding window counter. ' \
-                        'Thread-safe, no background threads, supports named counter registries.'
+                       'Thread-safe, no background threads, supports named counter registries.'
   spec.homepage      = 'https://github.com/philiprehberger/rb-rate-counter'
   spec.license       = 'MIT'
 
