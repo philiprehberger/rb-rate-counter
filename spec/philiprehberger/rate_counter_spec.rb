@@ -199,5 +199,98 @@ RSpec.describe Philiprehberger::RateCounter do
         expect(reg[:errors].count).to eq(2)
       end
     end
+
+    describe 'auto-creation' do
+      it 'creates a new counter on first access' do
+        reg = described_class.new(window: 60)
+        expect(reg.size).to eq(0)
+        reg[:new_counter]
+        expect(reg.size).to eq(1)
+      end
+
+      it 'accepts string keys' do
+        reg = described_class.new(window: 60)
+        reg['requests'].increment
+        expect(reg['requests'].count).to eq(1)
+      end
+    end
+  end
+
+  describe Philiprehberger::RateCounter::Counter do
+    describe 'high-frequency increments' do
+      it 'handles many rapid increments' do
+        counter = described_class.new(window: 60)
+        500.times { counter.increment }
+        expect(counter.count).to eq(500)
+      end
+    end
+
+    describe '#rate_per with different units' do
+      it 'rate_per second equals base rate' do
+        counter = described_class.new(window: 10)
+        counter.increment(50)
+        expect(counter.rate_per(:second)).to be_within(0.1).of(5.0)
+      end
+
+      it 'rate_per minute is 60x base rate' do
+        counter = described_class.new(window: 10)
+        counter.increment(50)
+        expect(counter.rate_per(:minute)).to be_within(1.0).of(300.0)
+      end
+
+      it 'rate_per hour is 3600x base rate' do
+        counter = described_class.new(window: 10)
+        counter.increment(50)
+        expect(counter.rate_per(:hour)).to be_within(100.0).of(18_000.0)
+      end
+    end
+
+    describe '#reset behavior' do
+      it 'rate returns 0.0 after reset' do
+        counter = described_class.new(window: 60)
+        counter.increment(100)
+        counter.reset
+        expect(counter.rate).to eq(0.0)
+      end
+
+      it 'count returns 0 after reset' do
+        counter = described_class.new(window: 60)
+        counter.increment(50)
+        counter.reset
+        expect(counter.count).to eq(0)
+      end
+
+      it 'can increment after reset' do
+        counter = described_class.new(window: 60)
+        counter.increment(100)
+        counter.reset
+        counter.increment(5)
+        expect(counter.count).to eq(5)
+      end
+    end
+
+    describe 'very short window' do
+      it 'accepts a fractional-second window' do
+        counter = described_class.new(window: 0.001)
+        counter.increment(10)
+        expect(counter.count).to be >= 0
+      end
+
+      it 'raises for zero window' do
+        expect { described_class.new(window: 0) }.to raise_error(Philiprehberger::RateCounter::Error)
+      end
+
+      it 'raises for negative window' do
+        expect { described_class.new(window: -5) }.to raise_error(Philiprehberger::RateCounter::Error)
+      end
+    end
+
+    describe 'increment chaining' do
+      it 'chains multiple increments' do
+        counter = described_class.new(window: 60)
+        counter.increment(1).increment(2).increment(3)
+        expect(counter.count).to eq(6)
+      end
+    end
   end
 end
