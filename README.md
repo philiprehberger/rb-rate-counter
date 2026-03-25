@@ -27,7 +27,7 @@ gem install philiprehberger-rate_counter
 ## Usage
 
 ```ruby
-require 'philiprehberger/rate_counter'
+require "philiprehberger/rate_counter"
 
 counter = Philiprehberger::RateCounter::Counter.new(window: 60)
 counter.increment
