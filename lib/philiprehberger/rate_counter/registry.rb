@@ -51,6 +51,17 @@ module Philiprehberger
       def size
         @mutex.synchronize { @counters.size }
       end
+
+      # Return a frozen snapshot of all counter states
+      #
+      # @return [Hash] frozen hash of name to counter snapshot
+      def snapshot
+        @mutex.synchronize do
+          @counters.each_with_object({}) do |(name, counter), result|
+            result[name] = counter.snapshot
+          end.freeze
+        end
+      end
     end
   end
 end

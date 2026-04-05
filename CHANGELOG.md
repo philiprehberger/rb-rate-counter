@@ -7,6 +7,15 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-04
+
+### Added
+- `Counter#peak_rate` for tracking highest observed rate
+- `Counter#snapshot` for exporting counter state as a frozen hash
+- `Registry#snapshot` for exporting all counter states
+- GitHub issue template gem version field
+- Feature request "Alternatives considered" field
+
 ## [0.1.6] - 2026-03-31
 
 ### Added
