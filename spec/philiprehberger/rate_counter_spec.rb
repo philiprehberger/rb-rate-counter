@@ -347,6 +347,44 @@ RSpec.describe Philiprehberger::RateCounter do
     end
   end
 
+  describe '#time_since_last' do
+    it 'returns nil when never incremented' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      expect(counter.time_since_last).to be_nil
+    end
+
+    it 'returns a non-negative Float immediately after increment' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment
+      elapsed = counter.time_since_last
+      expect(elapsed).to be_a(Float)
+      expect(elapsed).to be >= 0.0
+      expect(elapsed).to be < 0.1
+    end
+
+    it 'returns approximately the wait time after sleeping' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment
+      sleep 0.05
+      expect(counter.time_since_last).to be_within(0.05).of(0.05)
+    end
+
+    it 'returns nil after the window fully expires' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 0.05)
+      counter.increment
+      sleep 0.1
+      expect(counter.time_since_last).to be_nil
+    end
+
+    it 'returns time since the most recent increment when multiple exist' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      counter.increment
+      sleep 0.05
+      counter.increment
+      expect(counter.time_since_last).to be < 0.05
+    end
+  end
+
   describe 'registry snapshot' do
     it 'returns snapshots for all counters' do
       registry = Philiprehberger::RateCounter::Registry.new

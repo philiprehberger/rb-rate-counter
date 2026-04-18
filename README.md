@@ -53,6 +53,22 @@ registry[:api].increment(50)
 registry.snapshot           # => { api: { count: 50, rate: ..., ... } }
 ```
 
+### Last activity
+
+Check how long ago the counter last recorded an event:
+
+```ruby
+require "philiprehberger/rate_counter"
+
+counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+counter.time_since_last     # => nil (never incremented)
+counter.increment
+counter.time_since_last     # => 0.0001 (seconds since last increment)
+```
+
+Returns `nil` when the counter has never been incremented or when all events
+have expired from the sliding window.
+
 ### Registry
 
 Manage multiple named counters with a shared window configuration:
@@ -80,6 +96,7 @@ reg.reset_all              # => reset all counters
 | `#rate_per(unit)` | Projected rate per `:second`, `:minute`, or `:hour` |
 | `#peak_rate` | Highest rate per second observed since creation or last reset |
 | `#snapshot` | Frozen hash with count, rate, peak_rate, window, and timestamp |
+| `#time_since_last` | Seconds since the most recent increment, or `nil` if the window is empty |
 | `#reset` | Clear all recorded events |
 
 ### `Philiprehberger::RateCounter::Registry`

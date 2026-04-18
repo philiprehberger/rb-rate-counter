@@ -90,6 +90,21 @@ module Philiprehberger
         end
       end
 
+      # Get the number of seconds since the most recent increment
+      #
+      # Returns `nil` if the counter has never been incremented or if all
+      # events have fully expired from the sliding window.
+      #
+      # @return [Float, nil] seconds since the last increment, or nil if the window is empty
+      def time_since_last
+        @mutex.synchronize do
+          prune
+          return nil if @buckets.empty?
+
+          now - @buckets.last[0]
+        end
+      end
+
       # Get the rate projected to a specific time unit
       #
       # @param unit [Symbol] :second, :minute, or :hour
