@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-17
+
+### Added
+- `Counter#time_since_last` returns seconds since the most recent increment, or `nil` if the window is empty
+
 ## [0.2.0] - 2026-04-04
 
 ### Added
