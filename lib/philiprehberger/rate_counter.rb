@@ -117,6 +117,19 @@ module Philiprehberger
         rate * multiplier
       end
 
+      # True when the current rate exceeds `threshold`.
+      #
+      # Useful for back-pressure decisions and threshold-based alerts. Returns
+      # `false` when no events have been recorded yet.
+      #
+      # @param threshold [Numeric] the rate threshold to compare against
+      # @param unit [Symbol] :second, :minute, or :hour (default :second)
+      # @return [Boolean] true when current rate is strictly greater than threshold
+      # @raise [Error] if unit is unknown
+      def busy?(threshold:, unit: :second)
+        rate_per(unit) > threshold
+      end
+
       # Reset the counter
       #
       # @return [void]

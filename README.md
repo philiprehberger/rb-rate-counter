@@ -69,6 +69,19 @@ counter.time_since_last     # => 0.0001 (seconds since last increment)
 Returns `nil` when the counter has never been incremented or when all events
 have expired from the sliding window.
 
+### Threshold Check
+
+Quickly decide whether the counter is "busy" based on a rate threshold —
+useful for back-pressure decisions and alert wiring.
+
+```ruby
+counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+120.times { counter.increment }
+
+counter.busy?(threshold: 1)                    # => true (2 events/second > 1)
+counter.busy?(threshold: 100, unit: :minute)   # => true (120 events/min > 100)
+```
+
 ### Registry
 
 Manage multiple named counters with a shared window configuration:
@@ -94,6 +107,7 @@ reg.reset_all              # => reset all counters
 | `#rate` | Events per second over the window |
 | `#count` | Total events within the window |
 | `#rate_per(unit)` | Projected rate per `:second`, `:minute`, or `:hour` |
+| `#busy?(threshold:, unit: :second)` | True when current rate exceeds `threshold` for the given unit |
 | `#peak_rate` | Highest rate per second observed since creation or last reset |
 | `#snapshot` | Frozen hash with count, rate, peak_rate, window, and timestamp |
 | `#time_since_last` | Seconds since the most recent increment, or `nil` if the window is empty |

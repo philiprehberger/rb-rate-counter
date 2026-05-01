@@ -7,6 +7,11 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-01
+
+### Added
+- `Counter#busy?(threshold:, unit: :second)` — returns `true` when the current rate exceeds `threshold`. Supports `:second`, `:minute`, `:hour` via `unit:`. Useful for back-pressure decisions and threshold-based alerts.
+
 ## [0.3.0] - 2026-04-17
 
 ### Added

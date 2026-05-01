@@ -407,4 +407,32 @@ RSpec.describe Philiprehberger::RateCounter do
       expect(registry.snapshot).to eq({})
     end
   end
+
+  describe '#busy?' do
+    it 'is false for an idle counter' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      expect(counter.busy?(threshold: 0.01)).to be(false)
+    end
+
+    it 'is true when current rate exceeds the threshold' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      120.times { counter.increment }
+      # 120 events / 60s window = 2 events/second
+      expect(counter.busy?(threshold: 1)).to be(true)
+    end
+
+    it 'honors unit: :minute' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      30.times { counter.increment }
+      # rate_per(:minute) = (30/60) * 60 = 30 events/min
+      expect(counter.busy?(threshold: 25, unit: :minute)).to be(true)
+      expect(counter.busy?(threshold: 35, unit: :minute)).to be(false)
+    end
+
+    it 'raises on unknown unit' do
+      counter = Philiprehberger::RateCounter::Counter.new(window: 60)
+      expect { counter.busy?(threshold: 1, unit: :decade) }
+        .to raise_error(Philiprehberger::RateCounter::Error)
+    end
+  end
 end
